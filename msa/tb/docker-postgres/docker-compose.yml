@@ -1,0 +1,17 @@
+
+
+services:
+  postgres:
+    image: postgres:12-bookworm
+    container_name: mypostgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - '5439:5432'
+    environment:
+      POSTGRES_USER: thingsboard
+      POSTGRES_PASSWORD: postgres
+
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://aws:5432/thingsboard'
+      SPRING_DATASOURCE_USERNAME: 'postgres'
+      SPRING_DATASOURCE_PASSWORD: 'postgres'
