@@ -15,31 +15,24 @@
 # limitations under the License.
 #
 
+CONF_FOLDER="/usr/share/thingsboard/conf"
+jarfile=/usr/share/thingsboard/bin/thingsboard.jar
+configfile=thingsboard.conf
 firstlaunch=${DATA_FOLDER}/.firstlaunch
 
-PG_CTL=$(find /usr/lib/postgresql/ -name pg_ctl)
-
-if [ ! -d ${PGDATA} ]; then
-    mkdir -p ${PGDATA}
-    ${PG_CTL} initdb
-fi
-
-cp /tmp/pg_hba.conf ${PGDATA};
-cp /tmp/postgresql.conf ${PGDATA};
-
-echo "Starting Postgresql..."
-${PG_CTL} start
-
-RETRIES="${PG_ISREADY_RETRIES:-300}"
-until pg_isready -U thingsboard -d postgres --quiet || [ $RETRIES -eq 0 ]
-do
-    echo "Connecting to Postgres, $((RETRIES--)) attempts left..."
-    sleep 1
-done
+source "${CONF_FOLDER}/${configfile}"
 
 if [ ! -f ${firstlaunch} ]; then
-    echo "Creating database..."
-    psql -U thingsboard -d postgres -c "CREATE DATABASE thingsboard"
+    install-tb.sh --loadDemo && touch ${firstlaunch}
 fi
 
-echo "Postgresql is ready"
+if [ -f ${firstlaunch} ]; then
+    echo "Starting ThingsBoard ..."
+
+    java -cp ${jarfile} $JAVA_OPTS -Dloader.main=org.thingsboard.server.ThingsboardServerApplication \
+                        -Dspring.jpa.hibernate.ddl-auto=none \
+                        -Dlogging.config=${CONF_FOLDER}/logback.xml \
+                        org.springframework.boot.loader.launch.PropertiesLauncher
+else
+    echo "ERROR: ThingsBoard is not installed"
+fi

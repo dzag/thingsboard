@@ -1,0 +1,21 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    container_name: timescaledb
+    environment:
+      POSTGRES_DB: thingsboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5400:5432"
+    volumes:
+      - ./_data/timescale_data:/var/lib/postgresql/data
+
+  tb:
+    image: dzag/thingsboard:latest
+    environment:
+      - DATABASE_TS_TYPE=timescale
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://timescaledb:5432/thingsboard
+    ports:
+      - '9090:9090'
+      - '1883:1883'
